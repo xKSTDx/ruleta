@@ -115,7 +115,7 @@
 
   var fx=$('fx'),fc=fx.getContext('2d'),parts=[],raf=0,still=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var cols=['#ff4d6d','#ffc83d','#3bd6c6','#6c5ce7','#ff8f3d','#7bd83b','#ffffff'];
-  var taunts=['Elpen Dejo','Ni un premio de consolación.','Tan cerca y tan lejos.','Gracias por participar.', 'OH HELL NAH BRUH, IM OUT', 'Tu suerte se fue de sabatica.'];
+  var taunts=['Elpen Dejo 🫵🤣','Suerte para la proxima','Tu suerte se fue por cigarros','Gracias por participar', 'OH HELL NAH BRUH, IM OUT 🚪🚶', 'Ya quisieras'];
   function rnd(a,b){return a+Math.random()*(b-a)}
   function fxSize(){var d=window.devicePixelRatio||1;fx.width=innerWidth*d;fx.height=innerHeight*d;fc.setTransform(d,0,0,d,0,0)}
   var lastT=0;
@@ -164,7 +164,7 @@
     var box=$('win');box.hidden=false;box.classList.remove('lose');
     $('rm1').hidden=false;$('rmAll').hidden=false;$('taunt').hidden=true;$('wlabel').textContent='Ganador';
     if(mode==='fool'){
-      box.classList.add('lose');$('wlabel').textContent='No gana nada';$('who').textContent=w.name;
+      box.classList.add('lose');$('wlabel').textContent='No ganas nada';$('who').textContent=w.name;
       $('taunt').textContent=taunts[Math.floor(Math.random()*taunts.length)];$('taunt').hidden=false;
       $('rm1').hidden=true;$('rmAll').hidden=true;rain();
     }else{$('who').textContent=w.name;celebrate()}
