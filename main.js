@@ -28,8 +28,9 @@
   }
 
   function size(){
-    var s=$('stage').clientWidth, d=window.devicePixelRatio||1;
-    cv.width=s*d;cv.height=s*d;ctx.setTransform(d,0,0,d,0,0);return s;
+    var s=$('stage').clientWidth, d=window.devicePixelRatio||1, px=Math.round(s*d);
+    if(cv.width!==px||cv.height!==px){cv.width=px;cv.height=px}
+    ctx.setTransform(d,0,0,d,0,0);return s;
   }
   function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
 
@@ -117,12 +118,14 @@
   var taunts=['La ruleta se ríe de ti. Mucho.','Ni un premio de consolación. Ni uno.','Tan cerca y tan lejos. Bueno, solo lejos.','Gracias por participar. Gracias por nada.','Hasta la ruleta tenía mejores planes para ti.','Tu suerte fue a comprar cigarros y no volvió.'];
   function rnd(a,b){return a+Math.random()*(b-a)}
   function fxSize(){var d=window.devicePixelRatio||1;fx.width=innerWidth*d;fx.height=innerHeight*d;fc.setTransform(d,0,0,d,0,0)}
-  function kick(){if(!raf){fxSize();raf=requestAnimationFrame(loop)}}
-  function loop(){
+  var lastT=0;
+  function kick(){if(!raf){fxSize();lastT=0;raf=requestAnimationFrame(loop)}}
+  function loop(t){
+    var k=lastT?Math.min(50,t-lastT)/16.667:1;lastT=t;
     fc.clearRect(0,0,innerWidth,innerHeight);
     parts=parts.filter(function(p){return p.life>0&&p.y<innerHeight+50});
     parts.forEach(function(p){
-      p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.vx*=p.drag;p.life--;p.rot+=p.vr;
+      p.vy+=p.g*k;p.x+=p.vx*k;p.y+=p.vy*k;p.vx*=Math.pow(p.drag,k);p.life-=k;p.rot+=p.vr*k;
       fc.save();fc.globalAlpha=Math.max(0,Math.min(1,p.life/p.fade));fc.translate(p.x,p.y);fc.rotate(p.rot);
       if(p.img){fc.drawImage(p.img,-p.s/2,-p.s/2,p.s,p.s)}
       else if(p.spark){fc.fillStyle=p.c;fc.beginPath();fc.arc(0,0,p.s,0,TAU);fc.fill()}
