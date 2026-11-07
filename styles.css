@@ -43,3 +43,15 @@ canvas{width:100%;height:100%;display:block}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 #win.lose{border-color:#e5484d;animation:shake .5s}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}#win.lose{animation:none}}
+textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;resize:vertical}
+textarea:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+input[type=checkbox]{width:auto;accent-color:var(--accent)}
+.chk{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:14px;margin:8px 0 0}
+.tools{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+details{margin-bottom:12px}
+summary{cursor:pointer;font-weight:700;margin-bottom:8px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.hist{grid-column:1/-1}
+.hist h2{font-size:20px;margin:0 0 4px}
+#hlist{max-height:260px;overflow:auto;margin:12px 0;padding-left:36px}
+#hlist li{padding:4px 0}

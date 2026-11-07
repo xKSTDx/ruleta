@@ -5,6 +5,7 @@
   var $=function(id){return document.getElementById(id)};
   var TAU=Math.PI*2;
 
+  function rnd01(){return crypto.getRandomValues(new Uint32Array(1))[0]/4294967296}
   function color(i){return 'hsl('+((i*137.5)%360)+',62%,50%)'}
 
   // Mezcla: elige al azar ponderado por entradas restantes, evitando repetir al anterior
@@ -14,14 +15,14 @@
       var c=[],w=0;
       for(var i=0;i<left.length;i++) if(left[i]>0&&i!==last){c.push(i);w+=left[i]}
       if(!c.length){for(var j=0;j<left.length;j++) if(left[j]>0){c.push(j);w+=left[j]}}
-      var r=Math.random()*w, pick=c[c.length-1];
+      var r=rnd01()*w, pick=c[c.length-1];
       for(var m=0;m<c.length;m++){r-=left[c[m]];if(r<0){pick=c[m];break}}
       seq.push(pick);left[pick]--;last=pick;
     }
     // Evitar que el final se junte con el inicio
     var tries=0;
     while(seq.length>2&&seq[0]===seq[seq.length-1]&&tries++<200){
-      var p=1+Math.floor(Math.random()*(seq.length-2));
+      var p=1+Math.floor(rnd01()*(seq.length-2));
       if(seq[p]!==seq[0]&&seq[p-1]!==seq[0]&&seq[p+1]!==seq[0]){var t=seq[p];seq[p]=seq[seq.length-1];seq[seq.length-1]=t}
     }
     slices=seq;
@@ -88,23 +89,21 @@
     buildSlices();renderList();
     var ok=pool().length>=2;
     $('spin').disabled=!ok||spinning;$('spinFool').disabled=!ok||spinning;$('shuffle').disabled=!ok||spinning;$('clear').disabled=!players.length||spinning;
-    draw();
+    draw();save();
   }
 
   function add(){
     var name=$('name').value.trim(), n=parseInt($('qty').value,10);
     if(!name){$('name').focus();return}
-    if(!(n>=1))n=1;if(n>500)n=500;
-    var ex=players.filter(function(p){return p.name.toLowerCase()===name.toLowerCase()})[0];
-    if(ex){ex.n=Math.min(500,ex.n+n)}else{players.push({name:name,n:n,color:color(players.length)})}
+    addPlayer(name,n);
     $('name').value='';$('qty').value=1;$('name').focus();refresh();
   }
 
   function spin(mode){
     if(spinning||pool().length<2)return;
-    spinning=true;curMode=mode;$('win').hidden=true;
+    spinning=true;curMode=mode;$('win').hidden=true;play('spin');
     ['spin','spinFool','shuffle','clear'].forEach(function(i){$(i).disabled=true});
-    var start=rot, delta=TAU*(6+Math.random()*3)+Math.random()*TAU, dur=6000, t0=null;
+    var start=rot, delta=TAU*(6+rnd01()*3)+rnd01()*TAU, dur=7500, t0=null;
     function step(t){
       if(!t0)t0=t;var p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,4);
       rot=start+delta*e;draw();
@@ -166,16 +165,124 @@
     if(mode==='fool'){
       box.classList.add('lose');$('wlabel').textContent='No ganas nada';$('who').textContent=w.name;
       $('taunt').textContent=taunts[Math.floor(Math.random()*taunts.length)];$('taunt').hidden=false;
-      $('rm1').hidden=true;$('rmAll').hidden=true;rain();
-    }else{$('who').textContent=w.name;celebrate()}
+      $('rm1').hidden=true;$('rmAll').hidden=true;rain();play('lose');
+    }else{$('who').textContent=w.name;celebrate();play('win');winners.push({name:w.name,t:Date.now()});if(winners.length>1000)winners.shift();renderHist();save()}
   }
   function finish(){
-    spinning=false;
+    spinning=false;stopSpin();
     var a=TAU/slices.length, th=((-Math.PI/2-rot)%TAU+TAU)%TAU;
     winnerIdx=slices[Math.floor(th/a)%slices.length];
     result(pool()[winnerIdx],curMode);
     $('spin').disabled=false;$('spinFool').disabled=false;$('shuffle').disabled=false;$('clear').disabled=false;
   }
+
+  // ---------- Persistencia, importación, historial, sonido y enlace ----------
+  var KEY='ruleta:v1', colorN=0, winners=[], msgT=0;
+  var snd={win:new Audio('sonidos/win.mp3'),lose:new Audio('sonidos/lose.mp3'),spin:new Audio('sonidos/spin.mp3')};
+  snd.spin.loop=true;
+  function play(k){if(!$('snd').checked)return;try{var a=snd[k];a.currentTime=0;var p=a.play();if(p&&p.catch)p.catch(function(){})}catch(e){}}
+  function stopSpin(){try{snd.spin.pause();snd.spin.currentTime=0}catch(e){}}
+  function msg(t){$('msg').textContent=t;clearTimeout(msgT);msgT=setTimeout(function(){$('msg').textContent=''},6000)}
+  function pad(n){return n<10?'0'+n:''+n}
+  function fdate(t){var d=new Date(t);return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()}
+  function ftime(t){var d=new Date(t);return pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())}
+
+  function addPlayer(name,n){
+    name=String(name).trim().slice(0,30);if(!name)return false;
+    n=Math.max(1,Math.min(500,n|0||1));
+    var ex=players.filter(function(p){return p.name.toLowerCase()===name.toLowerCase()})[0];
+    if(ex)ex.n=Math.min(500,ex.n+n);else players.push({name:name,n:n,color:color(colorN++)});
+    return true;
+  }
+
+  function save(){
+    try{localStorage.setItem(KEY,JSON.stringify({players:players,winners:winners,colorN:colorN,snd:$('snd').checked}))}catch(e){}
+  }
+  function load(){
+    try{
+      var d=JSON.parse(localStorage.getItem(KEY)||'null');if(!d)return;
+      players=(d.players||[]).filter(function(p){return p&&typeof p.name==='string'&&p.n>=1}).map(function(p,i){
+        return {name:p.name.slice(0,30),n:Math.min(500,p.n|0),color:/^hsl\([\d.]+,62%,50%\)$/.test(p.color)?p.color:color(i)}
+      });
+      winners=(d.winners||[]).filter(function(h){return h&&typeof h.name==='string'}).map(function(h){return {name:h.name.slice(0,30),t:+h.t||Date.now()}});
+      colorN=Math.max(d.colorN|0,players.length);
+      $('snd').checked=d.snd!==false;
+    }catch(e){}
+  }
+
+  function importText(text){
+    if(spinning){msg('Espera a que termine el giro.');return}
+    var ok=0;
+    text.replace(/^\uFEFF/,'').split(/\r?\n/).forEach(function(l){
+      l=l.trim();if(!l)return;
+      var m=l.match(/^(.+?)[\s,;:]+(\d+)$/);
+      if(addPlayer(m?m[1]:l,m?parseInt(m[2],10):1))ok++;
+    });
+    refresh();msg(ok?ok+' línea(s) procesada(s).':'No encontré usuarios en el texto.');
+  }
+
+  function renderHist(){
+    var ol=$('hlist');ol.innerHTML='';
+    winners.slice().reverse().forEach(function(h){
+      var li=document.createElement('li');li.textContent=h.name+' — '+fdate(h.t)+' '+ftime(h.t);ol.appendChild(li);
+    });
+    $('hempty').hidden=winners.length>0;
+    $('hexp').disabled=$('hclr').disabled=!winners.length;
+  }
+
+  function enc(o){
+    var b=new TextEncoder().encode(JSON.stringify(o)),s='';
+    for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);
+    return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+  function dec(s){
+    s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';
+    var bin=atob(s),u=new Uint8Array(bin.length);
+    for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    return JSON.parse(new TextDecoder().decode(u));
+  }
+  function shareLink(){
+    if(!players.length){msg('No hay lista que compartir.');return}
+    var o={p:players.map(function(p){return [p.name,p.n]})};
+    if($('shareHist').checked&&winners.length)o.h=winners.map(function(h){return [h.name,h.t]});
+    var url=location.origin+location.pathname+'#d='+enc(o);
+    var warn=url.length>8000?' Ojo: es muy largo y algunos sitios podrían cortarlo.':'';
+    function ask(){prompt('Copia el enlace:',url)}
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(function(){msg('Enlace copiado.'+warn)},ask);
+    else ask();
+  }
+  function loadShared(){
+    var m=location.hash.match(/^#d=([\w-]+)$/);if(!m||spinning)return;
+    try{
+      var d=dec(m[1]);if(!Array.isArray(d.p))throw 0;
+      if(!players.length||confirm('Este enlace trae una lista compartida. ¿Reemplazar tu lista actual?')){
+        players=[];colorN=0;
+        d.p.slice(0,500).forEach(function(r){addPlayer(r[0],parseInt(r[1],10))});
+        if(Array.isArray(d.h))winners=d.h.slice(0,1000).map(function(r){return {name:String(r[0]).slice(0,30),t:+r[1]||Date.now()}});
+        msg('Lista cargada desde el enlace.');
+      }
+    }catch(e){msg('El enlace de la lista no es válido.')}
+    window.history.replaceState(null,'',location.pathname+location.search);
+  }
+
+  $('bulkAdd').onclick=function(){importText($('bulk').value);$('bulk').value=''};
+  $('txtBtn').onclick=function(){$('txt').click()};
+  $('txt').onchange=function(){
+    var f=this.files[0];this.value='';if(!f)return;
+    if(f.size>1e6){msg('El archivo es demasiado grande.');return}
+    var r=new FileReader();r.onload=function(){importText(String(r.result))};r.readAsText(f);
+  };
+  $('share').onclick=shareLink;
+  $('snd').onchange=function(){if(!this.checked)stopSpin();save()};
+  $('hclr').onclick=function(){if(confirm('¿Borrar todo el historial de ganadores?')){winners=[];renderHist();save()}};
+  $('hexp').onclick=function(){
+    var d=new Date(),txt=winners.map(function(h,i){return (i+1)+'. '+h.name+' - '+fdate(h.t)+' '+ftime(h.t)}).join('\r\n')+'\r\n';
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
+    a.download='ganadores_'+pad(d.getDate())+'-'+pad(d.getMonth()+1)+'-'+d.getFullYear()+'.txt';
+    document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+  };
+  window.addEventListener('hashchange',function(){loadShared();renderHist();refresh()});
 
   $('add').onclick=add;
   $('name').addEventListener('keydown',function(e){if(e.key==='Enter')add()});
@@ -188,6 +295,7 @@
   $('rmAll').onclick=function(){if(winnerIdx<0)return;players.splice(winnerIdx,1);refresh()};
   window.addEventListener('resize',function(){draw();if(raf)fxSize()});
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
-  refresh();
+  load();loadShared();renderHist();refresh();
+  if(document.fonts)document.fonts.ready.then(draw);
   setTimeout(warm,300);
 })();

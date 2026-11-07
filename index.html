@@ -21,6 +21,18 @@
     <ul id="list"></ul>
     <p class="empty" id="empty">Agrega al menos dos usuarios para armar la ruleta.</p>
     <p class="pct" id="total" style="margin:12px 0 0"></p>
+    <div class="tools">
+      <details>
+        <summary>Pegar o importar lista</summary>
+        <textarea id="bulk" rows="5" placeholder="Nombre1 99&#10;Nombre2 65&#10;Nombre3 44"></textarea>
+        <div class="btns"><button id="bulkAdd">Agregar lista</button><button class="ghost" id="txtBtn">Importar .txt</button></div>
+        <input type="file" id="txt" accept=".txt,text/plain" hidden>
+        <p class="hint">Una línea por usuario: nombre y número de entradas (máx. 500). Sin número cuenta como 1.</p>
+      </details>
+      <button class="ghost full" id="share">Copiar enlace de la lista</button>
+      <label class="chk"><input type="checkbox" id="shareHist"> Incluir ganadores anteriores</label>
+      <p class="hint" id="msg" aria-live="polite"></p>
+    </div>
   </section>
 
   <section class="wheelwrap" aria-label="Ruleta">
@@ -31,6 +43,7 @@
       <button class="ghost" id="shuffle" disabled>Mezclar entradas</button>
       <button class="ghost" id="clear" disabled>Vaciar todo</button>
     </div>
+    <label class="chk"><input type="checkbox" id="snd" checked> Sonido</label>
     <div id="win" hidden aria-live="polite">
       <small id="wlabel">Ganador</small>
       <p id="taunt" hidden></p>
@@ -40,6 +53,13 @@
         <button class="ghost" id="rmAll">Quitar a este pibble</button>
       </div>
     </div>
+  </section>
+  <section class="panel hist" aria-label="Historial de ganadores">
+    <h2>Historial de ganadores</h2>
+    <p class="hint">Se guarda solo en este navegador.</p>
+    <ol id="hlist" reversed></ol>
+    <p class="empty" id="hempty">Aún no hay ganadores.</p>
+    <div class="btns"><button class="ghost" id="hexp" disabled>Exportar .txt</button><button class="ghost" id="hclr" disabled>Borrar historial</button></div>
   </section>
 </main>
 <canvas id="fx" aria-hidden="true"></canvas>
