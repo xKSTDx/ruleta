@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ruleta de sorteo</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main>
+  <h1>Ruleta de sorteo</h1>
+  <p class="sub">Si no te gusta como quedó dale al botón de mezclar.</p>
+
+  <section class="panel" aria-label="Participantes">
+    <div class="row">
+      <div><label for="name">Usuario</label><input id="name" maxlength="30" autocomplete="off" placeholder="Nombre"></div>
+      <div><label for="qty">Entradas</label><input id="qty" type="number" min="1" max="500" value="1"></div>
+    </div>
+    <button class="full" id="add">Agregar usuario</button>
+    <ul id="list"></ul>
+    <p class="empty" id="empty">Agrega al menos dos usuarios para armar la ruleta.</p>
+    <p class="pct" id="total" style="margin:12px 0 0"></p>
+  </section>
+
+  <section class="wheelwrap" aria-label="Ruleta">
+    <div id="stage"><canvas id="cv" role="img" aria-label="Ruleta de sorteo"></canvas><div id="pin"></div></div>
+    <div class="actions">
+      <button id="spin" disabled>Elegir al ganador</button>
+      <button class="ghost" id="spinFool" disabled>Girar sin premio</button>
+      <button class="ghost" id="shuffle" disabled>Mezclar entradas</button>
+      <button class="ghost" id="clear" disabled>Vaciar todo</button>
+    </div>
+    <div id="win" hidden aria-live="polite">
+      <small id="wlabel">Ganador</small>
+      <p id="taunt" hidden></p>
+      <div class="who" id="who"></div>
+      <div class="actions">
+        <button class="ghost" id="rm1">Quitar una entrada</button>
+        <button class="ghost" id="rmAll">Quitar a este pibble</button>
+      </div>
+    </div>
+  </section>
+</main>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<script src="main.js" defer></script>
+</body>
+</html>
