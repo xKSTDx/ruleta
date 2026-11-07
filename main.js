@@ -115,7 +115,7 @@
 
   var fx=$('fx'),fc=fx.getContext('2d'),parts=[],raf=0,still=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var cols=['#ff4d6d','#ffc83d','#3bd6c6','#6c5ce7','#ff8f3d','#7bd83b','#ffffff'];
-  var taunts=['La ruleta se ríe de ti. Mucho.','Ni un premio de consolación. Ni uno.','Tan cerca y tan lejos. Bueno, solo lejos.','Gracias por participar. Gracias por nada.','Hasta la ruleta tenía mejores planes para ti.','Tu suerte fue a comprar cigarros y no volvió.'];
+  var taunts=['Elpen Dejo','Ni un premio de consolación.','Tan cerca y tan lejos.','Gracias por participar.', 'OH HELL NAH BRUH, IM OUT', 'Tu suerte se fue de sabatica.'];
   function rnd(a,b){return a+Math.random()*(b-a)}
   function fxSize(){var d=window.devicePixelRatio||1;fx.width=innerWidth*d;fx.height=innerHeight*d;fc.setTransform(d,0,0,d,0,0)}
   var lastT=0;
